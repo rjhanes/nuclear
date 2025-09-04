@@ -31,15 +31,17 @@ def prettify(database1, caption, category):
 
  
     if category == "no_subsidies":
-        database_styled = (database1.style.set_properties(**{'font-weight': 'bold'}, subset=slice_).\
-                           set_properties(**{'color': 'white','background-color': 'white' }, subset=slice_2).\
-                           set_caption(caption).set_table_styles([{'selector': 'caption','props': [('color', 'red'),('font-size', '20px')]}]))
+        database_styled = database1.copy()
+        #database_styled = (database1.style.set_properties(**{'font-weight': 'bold'}, subset=slice_).\
+        #                   set_properties(**{'color': 'white','background-color': 'white' }, subset=slice_2).\
+        #                   set_caption(caption).set_table_styles([{'selector': 'caption','props': [('color', 'red'),('font-size', '20px')]}]))
             
     elif category == "subsidies":
-        database_styled = (database1.style.set_properties(**{'font-weight': 'bold'}, subset=slice_).set_caption(caption).\
-                           set_table_styles([{'selector': 'caption','props': [('color', 'red'),('font-size', '20px')]}]))
+        database_styled = database1.copy()
+        #database_styled = (database1.style.set_properties(**{'font-weight': 'bold'}, subset=slice_).set_caption(caption).\
+        #                   set_table_styles([{'selector': 'caption','props': [('color', 'red'),('font-size', '20px')]}]))
     
-    return database_styled.hide()
+    return database_styled#.hide()
 
 
 
@@ -63,16 +65,17 @@ def update_high_level_costs(db, reactor_power):
 
 
     #     # update account 23 : material, labor, factory
-    db.loc[db.Account == 23, 'Factory Equipment Cost'] = (db.loc[db.Account == '232.1', 'Factory Equipment Cost']).values+\
+
+    db.loc[db.Account == 23, 'Factory Equipment Cost'] = (db.loc[db.Account == 232.1, 'Factory Equipment Cost']).values+\
     (db.loc[db.Account == 233, 'Factory Equipment Cost']).values
     
-    (db.loc[db['Account'] == 23, 'Site Material Cost']) = (db.loc[db['Account'] == '232.1', 'Site Material Cost']).values+\
+    (db.loc[db['Account'] == 23, 'Site Material Cost']) = (db.loc[db['Account'] == 232.1, 'Site Material Cost']).values+\
     (db.loc[db['Account'] == 233, 'Site Material Cost']).values
     
-    (db.loc[db['Account'] == 23, 'Site Labor Cost']) = (db.loc[db['Account'] == '232.1', 'Site Labor Cost']).values+\
+    (db.loc[db['Account'] == 23, 'Site Labor Cost']) = (db.loc[db['Account'] == 232.1, 'Site Labor Cost']).values+\
     (db.loc[db['Account'] == 233, 'Site Labor Cost']).values
     
-    (db.loc[db['Account'] == 23, 'Site Labor Hours']) = (db.loc[db['Account'] == '232.1', 'Site Labor Hours']).values+\
+    (db.loc[db['Account'] == 23, 'Site Labor Hours']) = (db.loc[db['Account'] == 232.1, 'Site Labor Hours']).values+\
     (db.loc[db['Account'] == 233, 'Site Labor Hours']).values
 
 
