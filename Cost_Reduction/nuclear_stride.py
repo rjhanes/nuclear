@@ -59,16 +59,20 @@ def _(pd):
         if reactor_type == 'Concept A':
             raise NotImplementedError
         elif reactor_type == 'Concept B':
-            Reactor_data_0 = pd.read_excel('Cost_Reduction/conceptb-inputs.xlsx',sheet_name='Costs')
+            Reactor_data_0 = pd.read_excel('Cost_Reduction/conceptb-inputs.xlsx',
+                                           sheet_name = 'Costs')
             _reactor_power = 310.8 * 1000
         db = pd.DataFrame()
-        db = Reactor_data_0[['Account', 'Title', 'Total Cost (USD)', 'Factory Equipment Cost', 'Site Labor Hours', 'Site Labor Cost', 'Site Material Cost']].copy()
+        db = Reactor_data_0[['Account', 'Title',
+                             'Total Cost (USD)', 'Factory Equipment Cost',
+                             'Site Labor Hours', 'Site Labor Cost',
+                             'Site Material Cost']].copy()
         Reactor_data = db
         return (Reactor_data, _reactor_power)
 
-    reactor_type = 'Concept B'
-    reactor_data = reactor_data_read(reactor_type)[0]
-    _reactor_power = reactor_data_read(reactor_type)[1]
+    # Check function
+    reactor_data = reactor_data_read('Concept B')[0]
+    _reactor_power = reactor_data_read('Concept B')[1]
 
     reactor_data
 
@@ -82,8 +86,13 @@ def _(mo):
 
 
 @app.cell
-def _(pd):
+def _():
+    # User specified parameters
+
+    # DO NOT CHANGE this one
     reactor_type_1 = 'Concept B'
+
+    # OK to change the rest of these
     n_th = 1
     num_orders = 13
     land_cost_per_acre_0 = 22000
@@ -105,15 +114,6 @@ def _(pd):
     n_ITC = 3
     f_22 = 250000000
     f_2321 = 150000000
-    global_levers = pd.DataFrame()
-    global_levers.loc[:, 'Lever'] = ['Design Maturity', 'Design Completion', 'Procurement (supply chain) experience ', 'Architecture & Engineering Experience', 'Construction service experience', ' Land Cost Per Acre (2023 USD)', 'ITC ', ' Interest Rate', 'BOP grade ', 'Reactor Building grade', 'modulariziation', 'standardization', 'Startup duration (months)']
-    global_levers.loc[:, 'User-Input Value'] = [Design_Maturity_0, design_completion_0, proc_exp_0, ae_exp_0, ce_exp_0, land_cost_per_acre_0, ITC_0, interest_rate_0, BOP_grade_0, RB_grade_0, mod_0, standardization_0, startup_0]
-    global_levers.loc[:, 'Lever baseline value (for a hopothetical well-executed project)'] = [2, 1, 2, 2, 2, 22000, 0, 0.06, 'nuclear', 'nuclear', 'modularized', 0.7, 16]
-    global_levers.loc[:, 'Range'] = ['0 - 2', '0 - 1', '0 - 2', '0 - 2', '0 - 2', '1000 - 100000', '0 - 0.4', '0 - 0.15', 'nuclear or non-nuclear', 'nuclear or non-nuclear', 'stick_built or modularized', '0.7 : 1', '3 : 24']
-    global_levers_changes = global_levers[global_levers['User-Input Value'] != global_levers['Lever baseline value (for a hopothetical well-executed project)']]
-    slice_ = pd.IndexSlice[global_levers_changes.index, global_levers_changes.columns]
-    #global_levers_styled = global_levers.style.set_properties(**{'background-color': 'yellow'}, subset=slice_).set_caption('User-Input Global levers <br> (highlighted in yellow if different from the baseline) <br>').set_table_styles([{'selector': 'caption', 'props': [('color', 'blue'), ('font-size', '20px')]}])
-    #global_levers_styled.hide()
     return (
         BOP_grade_0,
         Design_Maturity_0,
@@ -138,6 +138,93 @@ def _(pd):
         standardization_0,
         startup_0,
     )
+
+
+@app.cell
+def _(pd):
+    global_levers = pd.DataFrame()
+
+    global_levers.loc[:, 'Lever'] = ['Design Maturity', 
+                                     'Design Completion',
+                                     'Procurement (supply chain) experience ', 
+                                     'Architecture & Engineering Experience',
+                                     'Construction service experience',
+                                     ' Land Cost Per Acre (2023 USD)',
+                                     'ITC ',
+                                     ' Interest Rate',
+                                     'BOP grade ',
+                                     'Reactor Building grade',
+                                     'modulariziation',
+                                     'standardization',
+                                     'Startup duration (months)']
+
+    global_levers.loc[:, 'Lever baseline value (for a hopothetical well-executed project)'] = [2,
+                                                                                               1,
+                                                                                               2,
+                                                                                               2,
+                                                                                               2,
+                                                                                               22000,
+                                                                                               0,
+                                                                                               0.06,
+                                                                                               'nuclear',
+                                                                                               'nuclear',
+                                                                                               'modularized',
+                                                                                               0.7,
+                                                                                               16]
+
+    global_levers.loc[:, 'Range'] = ['0 - 2',
+                                     '0 - 1',
+                                     '0 - 2',
+                                     '0 - 2',
+                                     '0 - 2',
+                                     '1000 - 100000',
+                                     '0 - 0.4',
+                                     '0 - 0.15',
+                                     'nuclear or non-nuclear',
+                                     'nuclear or non-nuclear',
+                                     'stick_built or modularized',
+                                     '0.7 : 1',
+                                     '3 : 24']
+
+    #global_levers_changes = global_levers[global_levers['User-Input Value'] != global_levers['Lever baseline value (for a #hopothetical well-executed project)']]
+
+    #slice_ = pd.IndexSlice[global_levers_changes.index, global_levers_changes.columns]
+
+    global_levers.to_csv("Cost_Reduction/global_levers_baselines.csv", header = True, index = False)
+    return (global_levers,)
+
+
+@app.cell
+def _(
+    BOP_grade_0,
+    Design_Maturity_0,
+    ITC_0,
+    RB_grade_0,
+    ae_exp_0,
+    ce_exp_0,
+    design_completion_0,
+    global_levers,
+    interest_rate_0,
+    land_cost_per_acre_0,
+    mod_0,
+    proc_exp_0,
+    standardization_0,
+    startup_0,
+):
+    global_levers.loc[:, 'User-Input Value'] = [Design_Maturity_0,
+                                                design_completion_0,
+                                                proc_exp_0,
+                                                ae_exp_0,
+                                                ce_exp_0,
+                                                land_cost_per_acre_0,
+                                                ITC_0,
+                                                interest_rate_0,
+                                                BOP_grade_0,
+                                                RB_grade_0,
+                                                mod_0,
+                                                standardization_0,
+                                                startup_0]
+    return
 
 
 @app.cell(hide_code=True)
