@@ -141,60 +141,6 @@ def _():
 
 
 @app.cell
-def _(pd):
-    global_levers = pd.DataFrame()
-
-    global_levers.loc[:, 'Lever'] = ['Design Maturity', 
-                                     'Design Completion',
-                                     'Procurement (supply chain) experience ', 
-                                     'Architecture & Engineering Experience',
-                                     'Construction service experience',
-                                     ' Land Cost Per Acre (2023 USD)',
-                                     'ITC ',
-                                     ' Interest Rate',
-                                     'BOP grade ',
-                                     'Reactor Building grade',
-                                     'modulariziation',
-                                     'standardization',
-                                     'Startup duration (months)']
-
-    global_levers.loc[:, 'Lever baseline value (for a hopothetical well-executed project)'] = [2,
-                                                                                               1,
-                                                                                               2,
-                                                                                               2,
-                                                                                               2,
-                                                                                               22000,
-                                                                                               0,
-                                                                                               0.06,
-                                                                                               'nuclear',
-                                                                                               'nuclear',
-                                                                                               'modularized',
-                                                                                               0.7,
-                                                                                               16]
-
-    global_levers.loc[:, 'Range'] = ['0 - 2',
-                                     '0 - 1',
-                                     '0 - 2',
-                                     '0 - 2',
-                                     '0 - 2',
-                                     '1000 - 100000',
-                                     '0 - 0.4',
-                                     '0 - 0.15',
-                                     'nuclear or non-nuclear',
-                                     'nuclear or non-nuclear',
-                                     'stick_built or modularized',
-                                     '0.7 : 1',
-                                     '3 : 24']
-
-    #global_levers_changes = global_levers[global_levers['User-Input Value'] != global_levers['Lever baseline value (for a #hopothetical well-executed project)']]
-
-    #slice_ = pd.IndexSlice[global_levers_changes.index, global_levers_changes.columns]
-
-    global_levers.to_csv("Cost_Reduction/global_levers_baselines.csv", header = True, index = False)
-    return (global_levers,)
-
-
-@app.cell
 def _(
     BOP_grade_0,
     Design_Maturity_0,
@@ -203,14 +149,16 @@ def _(
     ae_exp_0,
     ce_exp_0,
     design_completion_0,
-    global_levers,
     interest_rate_0,
     land_cost_per_acre_0,
     mod_0,
+    pd,
     proc_exp_0,
     standardization_0,
     startup_0,
 ):
+    global_levers = pd.read_csv('Cost_Reduction/global_levers_baselines.csv')
+
     global_levers.loc[:, 'User-Input Value'] = [Design_Maturity_0,
                                                 design_completion_0,
                                                 proc_exp_0,
@@ -224,6 +172,13 @@ def _(
                                                 mod_0,
                                                 standardization_0,
                                                 startup_0]
+
+    global_levers
+    return
+
+
+@app.cell
+def _():
     return
 
 
