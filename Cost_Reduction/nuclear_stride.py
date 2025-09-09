@@ -59,21 +59,38 @@ def _(mo):
 
 @app.cell
 def _(pd):
-    def reactor_data_read(rtype):
+    def reactor_data_read(rtype = 'Concept B',
+                          datafilepath = 'Cost_Reduction/conceptb-inputs.xlsx'):
         """
-        """
-        if rtype == 'Concept A':
-            raise NotImplementedError
-        elif rtype == 'Concept B':
-            rdata = pd.read_excel('Cost_Reduction/conceptb-inputs.xlsx',
-                                           sheet_name = 'Costs')
-            rpower = 310.8 * 1000
+        Read in baseline cost data for a 300 MWe small modular reactor using
+        sodium fast reactor technology.
 
-        return (rdata[['Account', 'Title',
-                        'Total Cost (USD)', 'Factory Equipment Cost',
-                        'Site Labor Hours', 'Site Labor Cost',
-                        'Site Material Cost']],
-                rpower)
+        Parameters
+        ----------
+        rtype : string, Default = 'Concept B'
+        Reactor type. Calculations are only implemented for Concept B types.
+
+        datafilepath : string, Default = 'Cost_Reduction/conceptb-inputs.xlsx'
+        Relative location of inputs for Concept B reactor type.
+    
+        Returns
+        -------
+        tuple(pd.DataFrame, float, pd.DataFrame)
+        Tuple of read-in reactor data, the hard coded reactor power, and the spending curve data.
+        """
+        if rtype != 'Concept B':
+            raise NotImplementedError
+
+        rdata = pd.read_excel(datafilepath,
+                              sheet_name = 'Costs')
+        rpower = 310.8 * 1000
+        sp = pd.read_excel(datafilepath,
+                           sheet_name='Ref Spending Curve',
+                           usecols='A : D')
+
+        return (rdata,
+                rpower,
+                sp)
     return (reactor_data_read,)
 
 
@@ -211,15 +228,26 @@ def _(num_orders, update_high_level_costs):
                          f_22,
                          f_2321):
         """
-        """    
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        Adding the factory cost to accounts 22 and 232.1
+    
+        Parameters
+        ----------
+        rdata: pd.DataFrame
 
+        rpower: float
+
+        f_22: float
+
+        f_2321: float
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
+        """    
+        db = rdata.copy()
+
+        # Clear old values
         db.loc[db.Account == 22, 'Factory Equipment Cost'] = None
         db.loc[db.Account == 232.1, 'Factory Equipment Cost'] = None
 
@@ -235,13 +263,7 @@ def _(num_orders, update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (add_factory_cost,)
 
 
@@ -258,8 +280,6 @@ def _(add_factory_cost, f_22, f_2321, reactor_data, reactor_power):
                                             reactor_power,
                                             f_22,
                                             f_2321)
-
-    reactor_data_factory.to_csv('Cost_Reduction/factory.csv', index=False)
     return
 
 
@@ -273,16 +293,24 @@ def _(mo):
 def _(pd, update_high_level_costs):
     def add_land_cost(rdata, rpower, land_cost_per_acre):
         """
+        Add the land cost & Taxes
+    
+        Parameters
+        ----------
+        rdata
+
+        rpower
+
+        land_cost_per_acre
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
         db = pd.DataFrame()
 
-        db = rdata[['Account',
-                               'Title',
-                               'Total Cost (USD)',
-                               'Factory Equipment Cost',
-                               'Site Labor Hours',
-                               'Site Labor Cost',
-                               'Site Material Cost']].copy()
+        db = rdata.copy()
 
         db.loc[db.Account == 11, 'Total Cost (USD)'] = None
         db.loc[db.Account == 12, 'Total Cost (USD)'] = None
@@ -300,13 +328,7 @@ def _(pd, update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
 
     return (add_land_cost,)
 
@@ -324,17 +346,27 @@ def _(update_high_level_costs):
                           RB_grade_0,
                           BOP_grade_0):
         """
+        Adjust costs based on Whether the Reactor Building and BOP are nuclear grade equipment
+
+        Parameters
+        ----------
+        rdata
+
+        rpower
+
+        RB_grade_0
+
+        BOP_grade_0
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
         RB_grade = RB_grade_0
         BOP_grade = BOP_grade_0
 
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        db = rdata.copy()
 
         db.loc[db.Account == 212, 'Site Material Cost'] = None
         db.loc[db.Account == 212, 'Site Labor Cost'] = None
@@ -399,13 +431,7 @@ def _(update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (add_BOP_RP_grades,)
 
 
@@ -423,15 +449,28 @@ def _(np, update_high_level_costs):
                           f_22,
                           f_2321):
         """
-        """
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        Accounts for Bulk order of reactors
 
+        Parameters
+        ----------
+        rdata
+
+        rpower
+
+        num_orders
+
+        f_22
+
+        f_2321
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
+        """
+        db = rdata.copy()
+
+        # Hard coded learning rates
         lr22 = 0.180234165929142
         lr2321 = 0.260746237204082
 
@@ -453,13 +492,7 @@ def _(np, update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (add_bulk_ordering,)
 
 
@@ -481,6 +514,32 @@ def _(update_high_level_costs):
                                    ce_exp_0,
                                    N_cons):
         """
+        Accounts for reworking and labor productivity cost impacts
+
+        Parameters
+        ----------
+        rdata
+    
+        rpower
+    
+        reactor_type
+    
+        n_th
+    
+        design_completion_0
+    
+        ae_exp_0
+    
+        N_AE
+    
+        ce_exp_0
+    
+        N_cons
+    
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
         if n_th == 1:
             design_completion = design_completion_0
@@ -492,19 +551,13 @@ def _(update_high_level_costs):
             ce_exp = min(ce_exp_0 + 2 / N_cons * (n_th - 1), 2)
 
         productivity = 0.145 * ce_exp + 0.71
-
-        if reactor_type == 'Concept B':
-            reworking_factor = (-0.9 * design_completion + 1.9) * (-0.15 * ae_exp + 1.3) * (-0.15 * ce_exp + 1.3)
-        if reactor_type == 'Concept A':
+    
+        if reactor_type != 'Concept B':
             raise NotImplementedError
+    
+        reworking_factor = (-0.9 * design_completion + 1.9) * (-0.15 * ae_exp + 1.3) * (-0.15 * ce_exp + 1.3)
 
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        db = rdata.copy()
 
         for x in [212, 213, '211 plus 214 to 219', 22, 232.1, 233, 24, 26]:
             db.loc[db.Account == x, 'Factory Equipment Cost'] = None
@@ -563,8 +616,41 @@ def _(
                            ce_exp_0,
                            N_cons):
         """
+
+        Parameters
+        ----------
+        reactor_type
+    
+        n_th
+    
+        f_22
+    
+        f_2321
+    
+        land_cost_per_acre_0
+    
+        RB_grade_0
+    
+        BOP_grade_0
+    
+        num_orders
+    
+        design_completion_0
+    
+        ae_exp_0
+    
+        N_AE
+    
+        ce_exp_0
+    
+        N_cons
+    
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
-        if reactor_type == 'Concept A':
+        if reactor_type != 'Concept B':
             raise NotImplementedError
 
         rdata = reactor_data_read(reactor_type)[0]
@@ -618,7 +704,23 @@ def _(reactor_type):
                         rdata_updated,
                         mod_0):
         """
+        Update construction duration from labor hours
+
+        Parameters
+        ----------
+        rdata
+    
+        rdata_updated
+    
+        mod_0
+
+        Returns
+        -------
+        float: Construction duration
         """
+        if reactor_type != 'Concept B':
+            raise NotImplementedError
+    
         sum_old_lab_hrs = rdata.loc[rdata.Account == 21, 'Site Labor Hours'].values +\
         rdata.loc[rdata.Account == 22, 'Site Labor Hours'].values +\
         rdata.loc[rdata.Account == 23, 'Site Labor Hours'].values +\
@@ -637,11 +739,8 @@ def _(reactor_type):
             mod_factor = 0.8
         elif mod_0 == 'modularized':
             mod_factor = 1
-
-        if reactor_type == 'Concept B':
-            baseline_construction_duration = 64 / mod_factor
-        elif reactor_type == 'Concept A':
-            raise NotImplementedError
+    
+        baseline_construction_duration = 64 / mod_factor
 
         return baseline_construction_duration * (0.3 * labor_hour_ratio + 0.7)
     return (update_cons_dur,)
@@ -660,6 +759,22 @@ def _(np, pd, update_high_level_costs):
                         n_th,
                         standardization_0):
         """
+        Learning by doing effect on the cost
+
+        Parameters
+        ----------
+        rdata
+    
+        rpower
+    
+        n_th
+    
+        standardization_0
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
         if n_th == 1:
             standardization = 0.7
@@ -694,13 +809,7 @@ def _(np, pd, update_high_level_costs):
              0.180678729399]
         ) * standardization / 0.7
 
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        db = rdata.copy()
 
         for x in [212, 213, '211 plus 214 to 219', 22, 232.1, 233, 24, 26]:
             db.loc[db.Account == x, 'Site Labor Hours'] = None
@@ -720,13 +829,7 @@ def _(np, pd, update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (learning_effect,)
 
 
@@ -744,19 +847,38 @@ def act_cons_duration_plus_delay(reactor_type,
                                  N_proc,
                                  cons_duration_no_delay):
     """
+    Supply chain delays
+
+    Parameters
+    ----------
+    reactor_type
+    
+    n_th
+    
+    Design_Maturity_0
+    
+    proc_exp_0
+    
+    N_proc
+    
+    cons_duration_no_delay
+
+    Returns
+    -------
+    float: Construction duration
     """
+    if reactor_type != 'Concept B':
+        raise NotImplementedError
+
+    task_length_multiplier = 1
+    ref_construction_duration = 64
+    
     if n_th == 1:
         Design_Maturity = Design_Maturity_0
         proc_exp = proc_exp_0
     elif n_th > 1:
         Design_Maturity = 2
-        proc_exp = min(proc_exp_0 + 2 / N_proc * (n_th - 1), 2)
-
-    if reactor_type == 'Concept B':
-        task_length_multiplier = 1
-        ref_construction_duration = 64
-    elif reactor_type == 'Concept A':
-        raise NotImplementedError
+        proc_exp = min(proc_exp_0 + 2 / N_proc * (n_th - 1), 2)        
 
     B_21 = 42.1 * task_length_multiplier
     B_22 = 60.2 * task_length_multiplier
@@ -798,6 +920,19 @@ def _(np):
                                  standardization_0,
                                  actual_construction_duration_plus_delay):
         """
+        Learning by doing effect on the construction duration
+
+        Parameters
+        ----------
+        n_th
+    
+        standardization_0
+    
+        actual_construction_duration_plus_delay
+
+        Returns
+        -------
+        float: construction duration    
         """
         if n_th == 1:
             standardization = 0.7
@@ -826,6 +961,24 @@ def _(update_high_level_costs):
                              rdata,
                              final_construction_duration):
         """
+        Calculate the Indirect Cost and the standardization impact
+
+        Parameters
+        ----------
+        n_th
+    
+        rpower
+    
+        standardization_0
+    
+        rdata
+    
+        final_construction_duration
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
         if n_th == 1:
             standardization = 0.7
@@ -834,13 +987,7 @@ def _(update_high_level_costs):
 
         factor_35 = -3.33 * standardization + 3.331
 
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        db = rdata.copy()
 
         for x in [31, 32, 33, 34, 35]:
             db.loc[db.Account == x, 'Total Cost (USD)'] = None
@@ -866,13 +1013,7 @@ def _(update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (update_indirect_cost,)
 
 
@@ -910,8 +1051,52 @@ def _(
                             N_proc,
                             standardization_0):
         """
+        Combine the previous functions in one function
+
+        Parameters
+        ----------
+        reactor_type
+    
+        n_th
+    
+        f_22
+    
+        f_2321
+    
+        land_cost_per_acre_0
+    
+        RB_grade_0
+    
+        BOP_grade_0
+    
+        num_orders
+    
+        design_completion_0
+    
+        ae_exp_0
+    
+        N_AE
+    
+        ce_exp_0
+    
+        N_cons
+    
+        mod_0
+    
+        Design_Maturity_0
+    
+        proc_exp_0
+    
+        N_proc
+    
+        standardization_0
+
+        Returns
+        -------
+        tuple(pd.DataFrame, float)
+        DataFrame of updated costs, final construction duration
         """
-        if reactor_type == 'Concept A':
+        if reactor_type != 'Concept B':
             raise NotImplementedError
 
         reactor_data = reactor_data_read(reactor_type)[0]
@@ -971,14 +1156,22 @@ def _(update_high_level_costs):
                               rpower,
                               rdata_tot_base_cost):
         """
+        Insurance
+
+        Parameters
+        ----------
+        rdata
+    
+        rpower
+    
+        rdata_tot_base_cost
+
+        Returns
+        -------
+        pd.DataFrame
+        Structure identical to rdata with updated values
         """
-        db = rdata_tot_base_cost[['Account',
-                                  'Title',
-                                  'Total Cost (USD)',
-                                  'Factory Equipment Cost',
-                                  'Site Labor Hours',
-                                  'Site Labor Cost',
-                                  'Site Material Cost']].copy()
+        db = rdata_tot_base_cost.copy()
 
         db0 = rdata.copy()
 
@@ -994,13 +1187,7 @@ def _(update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db, rpower)
 
-        return rdata_updated[['Account',
-                              'Title',
-                              'Total Cost (USD)',
-                              'Factory Equipment Cost',
-                              'Site Labor Hours',
-                              'Site Labor Cost',
-                              'Site Material Cost']].copy()
+        return rdata_updated.copy()
     return (insurance_cost_update,)
 
 
@@ -1011,7 +1198,7 @@ def _(mo):
 
 
 @app.cell
-def _(np, pd, update_high_level_costs):
+def _(np, reactor_data_read, update_high_level_costs):
     def update_interest_cost(rdata,
                              rpower,
                              final_construction_duration,
@@ -1019,8 +1206,28 @@ def _(np, pd, update_high_level_costs):
                              startup_0,
                              n_th):
         """
+        Interest
+
+        Parameters
+        ----------
+        rdata,
+    
+        rpower,
+    
+        final_construction_duration,
+    
+        interest_rate,
+    
+        startup_0,
+    
+        n_th    
+
+        Returns
+        -------
+        tuple(pd.DataFrame, float, float)
+        Cost data frame, overnight capital cost, total capital investment
         """
-        sp = pd.read_excel('Cost_Reduction/conceptb-inputs.xlsx', sheet_name='Ref Spending Curve', usecols='A : D')
+        sp = reactor_data_read()[2]
 
         Months = sp['Month'].tolist()
         CDFs = sp['CDF'].tolist()
@@ -1058,13 +1265,7 @@ def _(np, pd, update_high_level_costs):
 
         int_exp_startup = (tot_int_exp_construction + tot_overnight_cost) * (1 + interest_rate) ** (startup / 12) - (tot_int_exp_construction + tot_overnight_cost)
 
-        db = rdata[['Account',
-                    'Title',
-                    'Total Cost (USD)',
-                    'Factory Equipment Cost',
-                    'Site Labor Hours',
-                    'Site Labor Cost',
-                    'Site Material Cost']].copy()
+        db = rdata.copy()
 
         db.loc[db.Account == 62, 'Total Cost (USD)'] = None
         db.loc[db.Account == 62, 'Total Cost (USD)'] = int_exp_startup + tot_int_exp_construction
@@ -1075,13 +1276,7 @@ def _(np, pd, update_high_level_costs):
             rdata_updated.Title == 'Total Capital Investment Cost (All Accounts)',
             'Total Cost (USD)'].values
 
-        return (rdata_updated[['Account',
-                               'Title',
-                               'Total Cost (USD)',
-                               'Factory Equipment Cost',
-                               'Site Labor Hours',
-                               'Site Labor Cost',
-                               'Site Material Cost']].copy(),
+        return (rdata_updated.copy(),
                 tot_overnight_cost,
                 tot_cap_investment)
     return (update_interest_cost,)
@@ -1103,19 +1298,28 @@ def _(ITC_reduction_factor, update_high_level_costs):
                    ITC_0,
                    n_ITC):
         """
+        Investment tax credit subsidies
+
+        Parameters
+        ----------
+        rdata,
+                   rpower,
+                   tot_overnight_cost,
+                   tot_cap_investment,
+                   n_th,
+                   ITC_0,
+                   n_ITC
+
+        Returns
+        -------
+        tuple(DataFrame, float, float)
         """
         if n_th <= n_ITC:
             ITC = ITC_0
         else:
             ITC = 0
 
-        db1 = rdata[['Account',
-                     'Title',
-                     'Total Cost (USD)',
-                     'Factory Equipment Cost',
-                     'Site Labor Hours',
-                     'Site Labor Cost',
-                     'Site Material Cost']].copy()
+        db1 = rdata.copy()
 
         ITC_cost_reduction_factor = ITC_reduction_factor(ITC)
 
@@ -1144,13 +1348,7 @@ def _(ITC_reduction_factor, update_high_level_costs):
 
         rdata_updated = update_high_level_costs(db1, rpower)
 
-        return (rdata_updated[['Account',
-                               'Title',
-                               'Total Cost (USD)',
-                               'Factory Equipment Cost',
-                               'Site Labor Hours',
-                               'Site Labor Cost',
-                               'Site Material Cost']].copy(),
+        return (rdata_updated.copy(),
                 ITC_reduced_OCC / rpower,
                 levelized_NCI)
     return (update_itc,)
@@ -1193,6 +1391,33 @@ def _(
                                interest_rate_0,
                                startup_0):
         """
+
+        Parameters
+        ----------
+        reactor_type,
+        n_th,
+        f_22,
+        f_2321,
+        land_cost_per_acre_0,
+        RB_grade_0,
+        BOP_grade_0,
+        num_orders,
+        design_completion_0,
+        ae_exp_0,
+        N_AE,
+        ce_exp_0,
+        N_cons,
+        mod_0,
+        Design_Maturity_0,
+        proc_exp_0,
+        N_proc,
+        standardization_0,
+        interest_rate_0,
+        startup_0
+
+        Returns
+        -------
+        tuple    
         """
         if reactor_type == 'Concept A':
             raise NotImplementedError
