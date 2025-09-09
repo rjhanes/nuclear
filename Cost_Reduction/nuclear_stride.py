@@ -1527,12 +1527,12 @@ def _(
     levelized_nci = final_result_all[2]
 
     construction_duration = final_result_all[3]
-    return (final_coa,)
+    return
 
 
 @app.cell
-def _(final_coa):
-    final_coa.to_csv('Cost_Reduction/final_coa.csv', index=False)
+def _():
+    #final_coa.to_csv('Cost_Reduction/final_coa.csv', index=False)
     return
 
 
