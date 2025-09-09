@@ -85,7 +85,7 @@ def update_high_level_costs(db, reactor_power):
     # update total costs for accounts 21 : 26
     
     # total = labor + factory + material
-    for x in [21, 212, 213, '211 plus 214 to 219', 22, 23, '232.1', 233, 24, 26]: 
+    for x in [21, 212, 213, '211 plus 214 to 219', 22, 23, 232.1, 233, 24, 26]: 
         (db.loc[db['Account'] == x, 'Total Cost (USD)']) = (db.loc[db['Account'] == x, 'Factory Equipment Cost'])+\
             (db.loc[db['Account'] == x, 'Site Labor Cost'])+ (db.loc[db['Account'] == x, 'Site Material Cost'])
 
@@ -112,7 +112,7 @@ def update_high_level_costs(db, reactor_power):
     
     # uodate costs per kw
     
-    
+
     (db.loc[db['Title'] == '10s - $/kWe', 'Total Cost (USD)']) = (db.loc[db['Title'] == '10s - Subtotal', 'Total Cost (USD)']).values/reactor_power 
     (db.loc[db['Title'] == '20s - $/kWe', 'Total Cost (USD)']) = (db.loc[db['Title'] == '20s - Subtotal', 'Total Cost (USD)']).values/reactor_power 
     (db.loc[db['Title'] == '30s - $/kWe', 'Total Cost (USD)']) = (db.loc[db['Title'] == '30s - Subtotal', 'Total Cost (USD)']).values/reactor_power 
