@@ -6,6 +6,16 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    # Derived from The Algorithm for the Capital Cost Estimation of Reactor Technologies (ACCERT)
+    # See original repo at: https://github.com/accert-dev/ACCERT/
+    # Original code is Copyright © 2023 UChicago Argonne, LLC
+
+    # Code adaptation: Rebecca Hanes, 2025, NREL
+    return
+
+
+@app.cell
+def _():
     import marimo as mo
     return (mo,)
 
